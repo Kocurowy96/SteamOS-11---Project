@@ -14,6 +14,10 @@ if %errorlevel% neq 0 (
     goto main
 )
 
+:: Set console appearance
+color 1F
+REM 1F: Blue background, white text
+
 set version=1.0.0
 set build=2025.04.07
 set name=SteamOS 11 Initialization
