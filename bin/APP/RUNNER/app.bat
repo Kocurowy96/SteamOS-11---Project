@@ -6,6 +6,7 @@ if not exist "%settingsFile%" (
     echo Creating default settings file...
     echo autorun-timeout=1 > "%settingsFile%"
     echo autorun=true >> "%settingsFile%"
+    echo steam-path=C:\Program Files (x86)\Steam >> "%settingsFile%"
 )
 
 for /f "tokens=1,2 delims==" %%a in ('type "%settingsFile%"') do (
@@ -20,20 +21,21 @@ echo ============================================
 echo 1. Launch Steam in Big Picture Mode
 echo 2. View Current Settings
 echo 3. Edit Settings
-echo 4. Exit
+echo 4. Change Steam Location
 echo 5. Reset Settings to Default
 echo 6. View Logs
+echo 7. Exit
 echo ============================================
-set /p choice=Select an option (1-6): 
+set /p choice=Select an option (1-7): 
 
 if "%choice%"=="1" (
     echo Launching Steam in Big Picture Mode...
-    if exist "C:\Program Files (x86)\Steam\steam.exe" (
-        start "C:\Program Files (x86)\Steam\steam.exe" -start steam://open/bigpicture
+    if exist "%steam-path%\steam.exe" (
+        start "%steam-path%\steam.exe" -start steam://open/bigpicture
         call :log Steam launched successfully
     ) else (
-        echo Steam is not installed or not found in the default location.
-        call :log Steam launch failed: steam.exe not found
+        echo Steam is not installed or not found in the specified location: %steam-path%.
+        call :log Steam launch failed: steam.exe not found in %steam-path%.
         pause
         goto menu
     )
@@ -46,8 +48,7 @@ if "%choice%"=="1" (
     call :editSettings
     goto menu
 ) else if "%choice%"=="4" (
-    echo Exiting...
-    timeout /t 1 >nul
+    call :changeSteamPath
     goto menu
 ) else if "%choice%"=="5" (
     call :resetSettings
@@ -55,6 +56,10 @@ if "%choice%"=="1" (
 ) else if "%choice%"=="6" (
     call :viewLogs
     goto menu
+) else if "%choice%"=="7" (
+    echo Exiting...
+    timeout /t 1 >nul
+    exit /b
 ) else (
     echo Invalid choice. Please try again.
     timeout /t 2 >nul
@@ -105,6 +110,31 @@ echo Setting updated or added successfully!
 pause
 goto menu
 
+:changeSteamPath
+cls
+echo ============================================
+echo Change Steam Location
+echo ============================================
+echo Current Steam Path: %steam-path%
+set /p newSteamPath=Enter the new Steam installation path: 
+if not exist "%newSteamPath%\steam.exe" (
+    echo The specified path does not contain steam.exe. Please try again.
+    pause
+    goto changeSteamPath
+)
+(for /f "tokens=1,2 delims==" %%a in ('type "%settingsFile%"') do (
+    if /i "%%a"=="steam-path" (
+        echo steam-path=%newSteamPath%
+    ) else (
+        echo %%a=%%b
+    )
+)) > "%settingsFile%.tmp"
+move /y "%settingsFile%.tmp" "%settingsFile%" >nul
+set steam-path=%newSteamPath%
+echo Steam path updated successfully to: %steam-path%
+pause
+goto menu
+
 :resetSettings
 cls
 echo ============================================
@@ -112,6 +142,7 @@ echo Resetting settings to default values...
 echo ============================================
 echo autorun-timeout=1 > "%settingsFile%"
 echo autorun=true >> "%settingsFile%"
+echo steam-path=C:\Program Files (x86)\Steam >> "%settingsFile%"
 echo Settings have been reset to default values.
 pause
 goto menu
